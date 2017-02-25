@@ -63,7 +63,6 @@ def signUp():
     _email = request.form['inputEmail']
     _password = request.form['inputPassword']
     _hashedPassword = generate_password_hash(_password)
-    print(_hashedPassword)
 
     if _name and _email and _password:
         cursor.callproc('sp_createUser', (_name, _email, _hashedPassword))
@@ -79,7 +78,11 @@ def userHome():
     if session.get('user'):
         return render_template('userHome.html')
     else:
-        return render_template('error.html', error = "You are not authorized")
+        return render_template('error.html', gurgle = "Access DENIED!")
+
+@app.route('/showAddBabble')
+def addDrop():
+    return render_template('addBabble.html')
 
 @app.route('/logout')
 def logout():
