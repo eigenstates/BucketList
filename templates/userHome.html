@@ -20,11 +20,56 @@
         </div>
  
         <div class="jumbotron">
-            <h1>Welcome Home !!</h1>
+            <h1>Why aren't you working?!</h1>
+            <div class="list-group"></div>
         </div>
         <footer class="footer">
             <p>&copy; EigenAnnoy 2017</p>
         </footer>
     </div>
+
+    <script>
+        function populateBabbles(jsonData){
+            var dropsDict = JSON.parse(jsonData)
+            var dropsInTheBucket = dropsDict.babbles
+            var rootDiv = document.querySelector('div.list-group');
+
+            for (var i=0;i<dropsInTheBucket.length; i++){
+                var babbleItem = document.createElement("div")
+                babbleItem.setAttribute('class', 'list-group')
+                var babbleRoot = document.createElement("a")
+                babbleRoot.setAttribute('class', 'list-group-item active')
+                babbleItem.appendChild(babbleRoot)
+                var babbleTitle = document.createElement("h4")
+                babbleTitle.setAttribute('class', 'list-group-item-heading')
+                babbleTitle.innerText = dropsInTheBucket[i].Title
+                babbleRoot.appendChild(babbleTitle)
+                var babbleText = document.createElement("p")
+                babbleText.setAttribute('class', 'list-group-item-text')
+                babbleText.innerText = dropsInTheBucket[i].Description
+                babbleRoot.appendChild(babbleText)
+                rootDiv.appendChild(babbleItem)
+            }
+
+
+        }
+        function getUserBabbles(callback){
+            console.log("CALLING BABBLES")
+            var req = new XMLHttpRequest();
+            req.open('GET', '/getBabbles', true);
+            req.onreadystatechange = callback;
+            req.send();      
+        }
+
+        getUserBabbles(function(){
+            if (this.readyState == 4 && this.status == 200) {
+                console.log("GOT IT")
+                populateBabbles(this.response);
+            }
+            else{
+
+            }
+        })
+    </script>
 </body>
 </html>
