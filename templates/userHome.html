@@ -21,55 +21,78 @@
  
         <div class="jumbotron">
             <h1>Why aren't you working?!</h1>
-            <div class="list-group"></div>
+            <div id = "app" class="list-group">
+                <dripsList></dripsList>
+            </div>
         </div>
         <footer class="footer">
             <p>&copy; EigenAnnoy 2017</p>
         </footer>
     </div>
 
-    <script>
-        function populateBabbles(jsonData){
-            var dropsDict = JSON.parse(jsonData)
-            var dropsInTheBucket = dropsDict.babbles
-            var rootDiv = document.querySelector('div.list-group');
+    <template id="dripInTheBucket">
+        <div class="">
+            <a v-for="drop in drips "class="list-group-item active">
+                <h4 class = list-group-item-heading>{{drop.Title}}</h4>
+                <p class="list-group-item-text">{{drop.Description}}</p>
+            </a>
+        </div>
+    </template>
+    <script src="https://unpkg.com/vue">
+    var vm = new  Vue({
+        el:"#app",
+        data:{}
+    });
+    
+    function populateBabbles(jsonData){
+        var dropsDict = JSON.parse(jsonData)
+        var dropsInTheBucket = dropsDict.babbles
+         Vue.componant('dripsList',{
+             template:"dripInTheBucket",
+             data: function(){
+                 return{
+                     drips:dropsInTheBucket
+                 }
+             }
+         })
 
-            for (var i=0;i<dropsInTheBucket.length; i++){
-                var babbleItem = document.createElement("div")
-                babbleItem.setAttribute('class', 'list-group')
-                var babbleRoot = document.createElement("a")
-                babbleRoot.setAttribute('class', 'list-group-item active')
-                babbleItem.appendChild(babbleRoot)
-                var babbleTitle = document.createElement("h4")
-                babbleTitle.setAttribute('class', 'list-group-item-heading')
-                babbleTitle.innerText = dropsInTheBucket[i].Title
-                babbleRoot.appendChild(babbleTitle)
-                var babbleText = document.createElement("p")
-                babbleText.setAttribute('class', 'list-group-item-text')
-                babbleText.innerText = dropsInTheBucket[i].Description
-                babbleRoot.appendChild(babbleText)
-                rootDiv.appendChild(babbleItem)
-            }
+        // var rootDiv = document.querySelector('div.list-group');
 
+        // for (var i=0;i<dropsInTheBucket.length; i++){
+        //     var babbleItem = document.createElement("div")
+        //     babbleItem.setAttribute('class', 'list-group')
+        //     var babbleRoot = document.createElement("a")
+        //     babbleRoot.setAttribute('class', 'list-group-item active')
+        //     babbleItem.appendChild(babbleRoot)
+        //     var babbleTitle = document.createElement("h4")
+        //     babbleTitle.setAttribute('class', 'list-group-item-heading')
+        //     babbleTitle.innerText = dropsInTheBucket[i].Title
+        //     babbleRoot.appendChild(babbleTitle)
+        //     var babbleText = document.createElement("p")
+        //     babbleText.setAttribute('class', 'list-group-item-text')
+        //     babbleText.innerText = dropsInTheBucket[i].Description
+        //     babbleRoot.appendChild(babbleText)
+        //     rootDiv.appendChild(babbleItem)
+        // }
+
+
+    }
+    function getUserBabbles(callback){
+        var req = new XMLHttpRequest();
+        req.open('GET', '/getBabbles', true);
+        req.onreadystatechange = callback;
+        req.send();      
+    }
+
+    getUserBabbles(function(){
+        if (this.readyState == 4 && this.status == 200) {
+            populateBabbles(this.response);
+        }
+        else{
 
         }
-        function getUserBabbles(callback){
-            console.log("CALLING BABBLES")
-            var req = new XMLHttpRequest();
-            req.open('GET', '/getBabbles', true);
-            req.onreadystatechange = callback;
-            req.send();      
-        }
-
-        getUserBabbles(function(){
-            if (this.readyState == 4 && this.status == 200) {
-                console.log("GOT IT")
-                populateBabbles(this.response);
-            }
-            else{
-
-            }
-        })
+    })
+    
     </script>
 </body>
 </html>
