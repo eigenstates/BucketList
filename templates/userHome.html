@@ -21,8 +21,15 @@
  
         <div class="jumbotron">
             <h1>Why aren't you working?!</h1>
-            <div id = "app" class="list-group">
-                <dripsList></dripsList>
+            <div id="dripInTheBucket"> 
+                <div v-for="drip in dripsData">
+                    <div class="list-group">
+                        <a class="list-group-item active">
+                            <h4 class="list-group-item-heading" v-html="drip.Title"></h4>
+                            <p class="list-group-item-text" v-html="drip.Description"></p>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         <footer class="footer">
@@ -30,31 +37,31 @@
         </footer>
     </div>
 
-    <template id="dripInTheBucket">
-        <div class="">
-            <a v-for="drop in drips "class="list-group-item active">
-                <h4 class = list-group-item-heading>{{drop.Title}}</h4>
-                <p class="list-group-item-text">{{drop.Description}}</p>
-            </a>
-        </div>
-    </template>
-    <script src="https://unpkg.com/vue">
-    var vm = new  Vue({
-        el:"#app",
-        data:{}
-    });
-    
-    function populateBabbles(jsonData){
-        var dropsDict = JSON.parse(jsonData)
-        var dropsInTheBucket = dropsDict.babbles
-         Vue.componant('dripsList',{
-             template:"dripInTheBucket",
-             data: function(){
-                 return{
-                     drips:dropsInTheBucket
-                 }
-             }
-         })
+    <script src="https://unpkg.com/vue"></script>
+    <script>
+
+    var vm;
+    function getUserBabbles(){
+        var req = new XMLHttpRequest();
+        req.open('GET', '/getBabbles', true);
+        req.onreadystatechange = function(){
+            if (this.readyState == 4 && this.status == 200) {
+                var dropsDict = JSON.parse(req.response);
+                console.log(dropsDict);
+                vm = new Vue({
+                    el:"#dripInTheBucket",
+                    data: function(){
+                        return {
+                            dripsData:dropsDict.babbles
+                        };
+                    }
+                });
+            }
+        }
+        req.send();      
+    }
+
+    getUserBabbles();
 
         // var rootDiv = document.querySelector('div.list-group');
 
@@ -74,25 +81,6 @@
         //     babbleRoot.appendChild(babbleText)
         //     rootDiv.appendChild(babbleItem)
         // }
-
-
-    }
-    function getUserBabbles(callback){
-        var req = new XMLHttpRequest();
-        req.open('GET', '/getBabbles', true);
-        req.onreadystatechange = callback;
-        req.send();      
-    }
-
-    getUserBabbles(function(){
-        if (this.readyState == 4 && this.status == 200) {
-            populateBabbles(this.response);
-        }
-        else{
-
-        }
-    })
-    
     </script>
 </body>
 </html>
