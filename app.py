@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 #app = flask_app.wsgi_app
 app = Flask(__name__)
 app.secret_key = 'loggins messina'
+app.config["TEMPLATES_AUTO_RELOAD"]=True
 
 #MySQL conf
 mySql = MySQL()
@@ -117,7 +118,6 @@ def getBabbles():
             cursor = conn.cursor()
             cursor.callproc('sp_getBabblesByUser',(_user,))
             babbles = cursor.fetchall()
-            print("ERE")
             
             babble_dict = []
             for babble in babbles:

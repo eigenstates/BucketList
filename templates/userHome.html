@@ -5,6 +5,18 @@
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
     <link href="../static/css/signup.css" rel="stylesheet">
+    <style>
+    .trash {
+        color: rgb(209, 91, 71);
+    }
+    .panel-body .checkbox {
+        display: inline-block;
+        margin: 0px;
+    }
+    .list-group {
+        margin-bottom: 0px;
+    }
+</style>
 </head>
 <body>
  
@@ -22,12 +34,50 @@
         <div class="jumbotron">
             <h1>Why aren't you working?!</h1>
             <div id="dripInTheBucket"> 
-                <div v-for="drip in dripsData">
-                    <div class="list-group">
-                        <a class="list-group-item active">
-                            <h4 class="list-group-item-heading" v-html="drip.Title"></h4>
-                            <p class="list-group-item-text" v-html="drip.Description"></p>
-                        </a>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel-body">
+                            <ul id="ulist" class="list-group">
+                                <li class="list-group-item" v-for="drip in dripsData">
+                                    {% raw %}
+                                    <div class="checkbox">
+                                        <label>{{drip.Title}}</label>
+                                    </div>
+                                    <div class="pull-right action-buttons">
+                                        <div v-on:click="editBabble(drip.Id)" ><span class="glyphicon glyphicon-pencil"></span></div>
+                                    </div>
+                                    {% endraw %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                        <h4 class="modal-title" id="editModalLabel">Update this Demand</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="recipient-name" class="control-label">Title:</label>
+                                <input type="text" class="form-control" id="editTitle">
+                            </div>
+                            <div class="form-group">
+                                <label for="message-text" class="control-label">Description:</label>
+                                <textarea class="form-control" id="editDescription"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" id="btnUpdate" class="btn btn-primary">Update</button>
                     </div>
                 </div>
             </div>
@@ -54,6 +104,11 @@
                         return {
                             dripsData:dropsDict.babbles
                         };
+                    },
+                    methods:{
+                        editBabble: function(id){
+                            alert(id);
+                        }
                     }
                 });
             }
