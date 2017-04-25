@@ -19,8 +19,7 @@
 </style>
 </head>
 <body>
- 
-    <div class="container">
+    <div class="container" id="dripsInTheBucket">
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
@@ -44,7 +43,8 @@
                                         <label>{{drip.Title}}</label>
                                     </div>
                                     <div class="pull-right action-buttons">
-                                        <div v-on:click="editBabble(drip.Id)" ><span class="glyphicon glyphicon-pencil"></span></div>
+                                        <a><span v-on:click="editBabble(drip.Id)" class="glyphicon glyphicon-pencil"></span></a>	
+                                        <a v-on:click="confirmDelete(drip.Id)" ><span class="glyphicon glyphicon-trash"></span></a>
                                     </div>
                                     {% endraw %}
                                 </li>
@@ -54,14 +54,14 @@
                 </div>
             </div>
         </div>
-
+<!-- EDIT MODAL -->
         <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        <button type="button" class="close" onclick="toggleModal()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
                         </button>
-                        <h4 class="modal-title" id="editModalLabel">Update this Demand</h4>
+                        <h4 class="modal-title" id="editModalLabel">Update this drip</h4>
                     </div>
                     <div class="modal-body">
                         <form role="form">
@@ -76,8 +76,23 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" id="btnUpdate" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-default" onclick="toggleModal()">Close</button>
+                        <button type="button" id="btnUpdate" v-on:click="updateBabble()" class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- DELETE MODAL CONFIRM -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header" style="text-align:center;">
+                        <h4 class="modal-title" style="color:red;" id="deleteModalLabel">You are going to Delete this forever !!</h4>
+                    </div>
+        
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" onclick="toggleModal()">Cancel</button>
+                        <button type="button" id="btnDelete" v-on:click="deleteBabble()" class="btn btn-primary">Delete</button>
                     </div>
                 </div>
             </div>
@@ -91,51 +106,106 @@
     <script>
 
     var vm;
-    function getUserBabbles(){
-        var req = new XMLHttpRequest();
-        req.open('GET', '/getBabbles', true);
-        req.onreadystatechange = function(){
-            if (this.readyState == 4 && this.status == 200) {
-                var dropsDict = JSON.parse(req.response);
-                console.log(dropsDict);
-                vm = new Vue({
-                    el:"#dripInTheBucket",
-                    data: function(){
-                        return {
-                            dripsData:dropsDict.babbles
-                        };
-                    },
-                    methods:{
-                        editBabble: function(id){
-                            alert(id);
+    function loadPageData(){
+        //This seems to be the only way to get the data to populate correctly
+        httpRequest('/getBabbles', "GET", null, function(req){
+            var dropsDict = JSON.parse(req.response);
+            vm = new Vue({
+                el:"#dripsInTheBucket",
+                data: function(){
+                    return {
+                        dripsData:dropsDict.babbles
+                    };
+                },
+                methods:{
+                    editBabble: function(id){
+                        currentModal = document.querySelector("#editModal")
+                        for (var i = 0; i < vm.dripsData.length; i++) {
+                            if( vm.dripsData[i].Id == id){
+                                currentModal.querySelector("#editTitle").value = vm.dripsData[i].Title;
+                                currentModal.querySelector("#editDescription").value = vm.dripsData[i].Description;
+                                currentModal.querySelector("#btnUpdate").setAttribute("data-id", id);
+                            } 
                         }
+                        toggleModal();
+                    },
+                    updateBabble:function(){
+                        currentModal = document.querySelector("#editModal");
+                        var title = currentModal.querySelector("#editTitle").value
+                        var description = currentModal.querySelector("#editDescription").value
+                        var id = currentModal.querySelector("#btnUpdate").getAttribute("data-id");
+
+                        var params = "title="+title+"&description="+description+"&id="+id;
+                        httpRequest("/updateBabble", "POST", params, function(response){
+                            httpRequest('/getBabbles', "GET", null, function(req){
+                                var dropsDict = JSON.parse(req.response);
+                                vm.dripsData = dropsDict.babbles;
+                                toggleModal();
+                            })
+                        })
+                    },
+                    confirmDelete:function(dripId){
+                        currentModal = document.querySelector("#deleteModal");
+                        currentModal.setAttribute("data-id", dripId);
+                        toggleModal();
+                    },
+                    deleteBabble: function(){
+                        var id = currentModal.getAttribute("data-id");
+                        httpRequest("/deleteBabble", "POST", 'id='+id, function(req){
+                            var result = JSON.parse(req.response);
+                            if(result.status == 'OK'){
+                                httpRequest('/getBabbles', "GET", null, function(req){
+                                    var dropsDict = JSON.parse(req.response);
+                                    vm.dripsData = dropsDict.babbles;
+                                    toggleModal();
+                                })
+                            }
+                            else{
+                                alert(result.status);
+                            }
+                        })
                     }
-                });
-            }
-        }
-        req.send();      
+                }
+            });
+        })   
     }
 
-    getUserBabbles();
+    
+    var currentModal;
+    function toggleModal(){
+        if(currentModal.getAttribute("aria-hidden") == "true"){
+            currentModal.setAttribute("class", "modal fade in")
+            currentModal.setAttribute("aria-hidden", "false")
+            currentModal.setAttribute("style", "display:block")
+        }
+        else{
+            currentModal.setAttribute("class", "modal fade")
+            currentModal.setAttribute("aria-hidden", "true")
+            currentModal.setAttribute("style", "display:none")
+            if(currentModal.querySelector("#editTitle")){
+                currentModal.querySelector("#editTitle").value = ""
+                currentModal.querySelector("#editDescription").value = "";
+            }
+        }
+    }
 
-        // var rootDiv = document.querySelector('div.list-group');
+    function httpRequest(url, method, params, callback){
+        var http = new XMLHttpRequest();
+        http.open(method, url, true);
+        if(params){
+            http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        }
 
-        // for (var i=0;i<dropsInTheBucket.length; i++){
-        //     var babbleItem = document.createElement("div")
-        //     babbleItem.setAttribute('class', 'list-group')
-        //     var babbleRoot = document.createElement("a")
-        //     babbleRoot.setAttribute('class', 'list-group-item active')
-        //     babbleItem.appendChild(babbleRoot)
-        //     var babbleTitle = document.createElement("h4")
-        //     babbleTitle.setAttribute('class', 'list-group-item-heading')
-        //     babbleTitle.innerText = dropsInTheBucket[i].Title
-        //     babbleRoot.appendChild(babbleTitle)
-        //     var babbleText = document.createElement("p")
-        //     babbleText.setAttribute('class', 'list-group-item-text')
-        //     babbleText.innerText = dropsInTheBucket[i].Description
-        //     babbleRoot.appendChild(babbleText)
-        //     rootDiv.appendChild(babbleItem)
-        // }
+        http.onreadystatechange = function() {//Call a function when the state changes.
+            if(http.readyState == 4 && http.status == 200) {
+                callback(http)
+            }
+        }
+
+        http.send(params);
+    }
+
+    loadPageData();
     </script>
 </body>
 </html>

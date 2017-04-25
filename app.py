@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 #app = flask_app.wsgi_app
 app = Flask(__name__)
 app.secret_key = 'loggins messina'
-app.config["TEMPLATES_AUTO_RELOAD"]=True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 #MySQL conf
 mySql = MySQL()
@@ -24,15 +24,15 @@ def main():
 def showSignin():
     return render_template('signin.html')
 
-@app.route('/validateLogin', methods = ['POST'])
+@app.route('/validateLogin', methods=['POST'])
 def validateLogin():
     try:
-        _userName = request.form['inputEmail']
+        _username = request.form['inputEmail']
         _password = request.form['inputPassword']
 
         conn = mySql.connect()
         cursor = conn.cursor()
-        cursor.callproc('sp_validateLogin',(_userName,))
+        cursor.callproc('sp_validateLogin', (_username,))
         data = cursor.fetchall()
 
         if len(data) > 0:
@@ -40,20 +40,20 @@ def validateLogin():
                 session['user'] = data[0][0]
                 return redirect('/userHome')
             else:
-                return render_template('error.html', error = "Wrong email address or password")
+                return render_template('error.html', error="Wrong email address or password")
         else:
-            return render_template('error.html', error = "Wrong email address or password")
+            return render_template('error.html', error="Wrong email address or password")
     except Exception as e:
-        return render_template('error.html', error = str(e))
+        return render_template('error.html', error=str(e))
     finally:
         cursor.close()
         conn.close()
 
-    
+
 @app.route('/showSignup')
 def showSignup():
     return render_template('signup.html')
-    
+
 @app.route('/signUp', methods=['POST'])
 def signUp():
     #get values from UI
@@ -64,21 +64,21 @@ def signUp():
     if _name and _email and _password:
         conn = mySql.connect()
         cursor = conn.cursor()
-        hashedPassword = generate_password_hash(_password)
-        cursor.callproc('sp_createUser', (_name, _email, hashedPassword))
+        hashedpassword = generate_password_hash(_password)
+        cursor.callproc('sp_createUser', (_name, _email, hashedpassword))
         data = cursor.fetchall()
         if len(data) is 0:
             conn.commit()
             return redirect('/userHome')
     else:
-        return render_template('error.html', error = "Please fill in all fields")
+        return render_template('error.html', error="Please fill in all fields")
 
 @app.route('/userHome')
 def userHome():
     if session.get('user'):
         return render_template('userHome.html')
     else:
-        return render_template('error.html', error = "Access DENIED!")
+        return render_template('error.html', error="Access DENIED!")
 
 @app.route('/showAddBabble')
 def addDrop():
@@ -93,17 +93,17 @@ def addBabble():
             _user = session.get('user')
             conn = mySql.connect()
             cursor = conn.cursor()
-            cursor.callproc('sp_addBabble',(_title, _description, _user))
+            cursor.callproc('sp_addBabble', (_title, _description, _user))
             data = cursor.fetchall()
             if len(data) is 0:
                 conn.commit()
                 return redirect('/userHome')
             else:
-                return render_template('error.html', error = "A vague error occured")
+                return render_template('error.html', error="A vague error occured")
         else:
-            return render_template('error.html', error = "Who do you think you are? I don't know.")
+            return render_template('error.html', error="Who do you think you are? I don't know.")
     except Exception as e:
-        return render_template('error.html', error = str(e))
+        return render_template('error.html', error=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -116,9 +116,9 @@ def getBabbles():
 
             conn = mySql.connect()
             cursor = conn.cursor()
-            cursor.callproc('sp_getBabblesByUser',(_user,))
+            cursor.callproc('sp_getBabblesByUser', (_user,))
             babbles = cursor.fetchall()
-            
+
             babble_dict = []
             for babble in babbles:
                 babble_item = {
@@ -128,15 +128,83 @@ def getBabbles():
                     'Date':babble[3]
                 }
                 babble_dict.append(babble_item)
-            print (babble_dict)
             return jsonify({'babbles': babble_dict})
         else:
-            return render_template('error.html', error = "Who do you think you are? I don't know.")
+            return render_template('error.html', error="Who do you think you are? I don't know.")
     except Exception as e:
-        return render_template('error.html', error = str(e))
+        return render_template('error.html', error=str(e))
     finally:
         cursor.close()
-        conn.close()      
+        conn.close()
+
+'''@app.route("/getBabbleById", methods=['POST'])
+def getBabbleById():
+    try:
+        if session.get('user'):
+            _id = request.form['id']
+            _user = session.get('user')
+
+            conn = mySql.connect()
+            cursor = conn.cursor()
+            cursor.callproc('sp_getBabblesById',(_id,_user,))
+            result = cursor.fetchall()
+
+            babble = []
+            babble.append({'Id':result[0][0], 'Title':result[0][1], 'Description':[0][2]})
+            return json.dumps(babble)
+        else:
+            return render_template('error.html', error='Do you need to log in? Yes. Yes you do. UNAUTHORIZED!')
+    except Exception as e:
+        return render_template('error.html', error = str(e))'''
+
+@app.route("/updateBabble", methods=['POST'])
+def updateBabble():
+    print session.get('user')
+    print request.form['id']
+    print request.form['title']
+    print request.form['description']
+    try:
+        if session.get('user'):
+            _id = request.form['id']
+            _title = request.form['title']
+            _description = request.form['description']
+            _user = session.get('user')
+
+            conn = mySql.connect()
+            cursor = conn.cursor()
+            cursor.callproc('sp_updateBabble', (_title, _description, _id, _user))
+            result = cursor.fetchall()
+            if len(result) is 0:
+                conn.commit()
+                return json.dumps({"status":"OK"})
+            else:
+                return json.dumps({"status":"The data is messed up"})
+    except Exception as e:
+        return json.dumps({"status":"Do you need to log in? Yes. Yes you do. UNAUTHORIZED!"})
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/deleteBabble", methods=['POST'])
+def deleteBabble():
+    try:
+        _id = request.form['id']
+        _user = session.get('user')
+        
+        conn = mySql.connect()
+        cursor = conn.cursor()
+        cursor.callproc('sp_deleteBabble', (_id, _user))
+        result = cursor.fetchall()
+        if len(result) is 0:
+            conn.commit()
+            return json.dumps({"status":"OK"})
+        else:
+            return json.dumps({"status":"The data is messed up"})
+    except Exception as e:
+        return json.dumps({"status":"Do you need to log in? Yes. Yes you do. UNAUTHORIZED!"})
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route('/logout')
