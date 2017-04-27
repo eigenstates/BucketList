@@ -5,50 +5,87 @@
 
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <style>
+        .btn-file {
+            position: relative;
+            overflow: hidden;
+        }
+         
+        .btn-file input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 100%;
+            min-height: 100%;
+            font-size: 100px;
+            text-align: right;
+            filter: alpha(opacity=0);
+            opacity: 0;
+            outline: none;
+            background: white;
+            cursor: inherit;
+            display: block;
+        }
+    </style>
 </head> 
 <body>
     <div class="container">
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active"><a href="#">Add Item</a></li>
+                    <li role="presentation" class="active"><a href="#">Add Another Drip</a></li>
                     <li role="presentation"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
             <h3 class="text-muted">To Annoy</h3>
         </div>
         <section>
-            <form class="form-horizontal" method="post" action="/addBabble">
-                <fieldset>
- 
-                    <!-- Form Name -->
-                    <legend>Create A Drop in the Bucket</legend>
- 
-                    <!-- Text input-->
-                    <div class="form-group">
-                        <label class="col-md-4 control-label" for="txtTitle">Title</label>
-                        <div class="col-md-4">
-                            <input id="txtTitle" name="inputTitle" type="text" placeholder="placeholder" class="form-control input-md">
-                        </div>
+            <form role="form" method="post" action="/addBabble">
+                <!-- Form Name -->
+                <legend>Add a drop in the Bucket</legend>
+
+                <!-- Text input-->
+                <div class="form-group">
+                    <label for="txtTitle">Title</label>
+                    <input id="txtTitle" name="inputTitle" type="text" placeholder="placeholder" class="form-control input-md">
+                </div>
+
+                <!-- Textarea -->
+                <div class="form-group">
+                    <label for="txtPost">Describe</label>
+                    <textarea class="form-control" id="txtPost" name="inputDescription"></textarea>
+                </div>
+                <!-- Photo area -->
+                <div class="form-group">
+                    <label for="txtPost">Photos</label>
+                    <div class="input-group">
+                        <span class="input-group-btn">
+                            <span class="btn btn-primary btn-file">
+                                Browse&hellip; <input type="file" id="fileupload" name="file" multiple>
+                            </span>
+                        </span>
+                        <input type="text" class="form-control" readonly>
                     </div>
- 
-                    <!-- Textarea -->
-                    <div class="form-group">
-                        <label class="col-md-4 control-label" for="txtPost">Post</label>
-                        <div class="col-md-4">
-                            <textarea class="form-control" id="txtPost" name="inputDescription"></textarea>
-                        </div>
-                    </div>
- 
-                    <!-- Button -->
-                    <div class="form-group">
-                        <label class="col-md-4 control-label" for="singlebutton"></label>
-                        <div class="col-md-4">
-                            <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Publish" />
-                        </div>
-                    </div>
- 
-                </fieldset>
+                </div>
+                <!-- Private area -->
+                <div class="form-group">
+                    <label>Mark this as private and not visible to others.</label>
+                    <br/>
+                    <input type="checkbox"> Mark as Private <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                </div>
+                <!-- Finished area -->
+                <div class="form-group">
+                    <label>Have you already accomplished this?</label>
+                    <br/>
+                    <input type="checkbox"> Mark as Done <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                </div>
+
+                <!-- Button -->
+                <div class="form-group">
+                    <p class="text-center">
+                        <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Publish" />
+                    </p>
+                </div>
             </form>
         </section>
         <footer class="footer">
