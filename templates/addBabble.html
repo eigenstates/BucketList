@@ -33,64 +33,86 @@
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active"><a href="#">Add Another Drip</a></li>
+                    <li role="presentation" class="active"><a href="#">Add More Drip</a></li>
                     <li role="presentation"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
             <h3 class="text-muted">To Annoy</h3>
         </div>
-        <section>
-            <form role="form" method="post" action="/addBabble">
-                <!-- Form Name -->
-                <legend>Add a drop in the Bucket</legend>
+        <form id="addBabbleForm" role="form" method="post" action="/addBabble">
+            <!-- Form Name -->
+            <legend>Add a drop in the Bucket</legend>
 
-                <!-- Text input-->
-                <div class="form-group">
-                    <label for="txtTitle">Title</label>
-                    <input id="txtTitle" name="inputTitle" type="text" placeholder="placeholder" class="form-control input-md">
-                </div>
+            <!-- Text input-->
+            <div class="form-group">
+                <label for="txtTitle">Title</label>
+                <input id="txtTitle" name="inputTitle" type="text" placeholder="placeholder" class="form-control input-md">
+            </div>
 
-                <!-- Textarea -->
-                <div class="form-group">
-                    <label for="txtPost">Describe</label>
-                    <textarea class="form-control" id="txtPost" name="inputDescription"></textarea>
-                </div>
-                <!-- Photo area -->
-                <div class="form-group">
-                    <label for="txtPost">Photos</label>
-                    <div class="input-group">
-                        <span class="input-group-btn">
-                            <span class="btn btn-primary btn-file">
-                                Browse&hellip; <input type="file" id="fileupload" name="file" multiple>
-                            </span>
+            <!-- Textarea -->
+            <div class="form-group">
+                <label for="txtPost">Describe</label>
+                <textarea class="form-control" id="txtPost" name="inputDescription"></textarea>
+            </div>
+            <!-- Photo area -->
+            <div class="form-group">
+                <label for="txtPost">Photos</label>
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <span class="btn btn-primary btn-file">
+                            Browse&hellip; <input type="file" id="fileupload" onchange="fileSelected(this)" name="file" multiple>
                         </span>
-                        <input type="text" class="form-control" readonly>
+                    </span>
+                    <div class="pull-right">
+                        <img id="imgUpload" style="width: 140px; height: 140px;" class="img-thumbnail">
                     </div>
                 </div>
-                <!-- Private area -->
-                <div class="form-group">
-                    <label>Mark this as private and not visible to others.</label>
-                    <br/>
-                    <input type="checkbox"> Mark as Private <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
-                </div>
-                <!-- Finished area -->
-                <div class="form-group">
-                    <label>Have you already accomplished this?</label>
-                    <br/>
-                    <input type="checkbox"> Mark as Done <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                </div>
-
-                <!-- Button -->
-                <div class="form-group">
-                    <p class="text-center">
-                        <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Publish" />
-                    </p>
-                </div>
-            </form>
-        </section>
+            </div>
+            <!-- Private area -->
+            <div class="form-group">
+                <label>Mark this as private and not visible to others.</label>
+                <br/>
+                <input name="private" type="checkbox"> Mark as Private <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+            </div>
+            <!-- Finished area -->
+            <div class="form-group">
+                <label>Have you already accomplished this?</label>
+                <br/>
+                <input name="done" type="checkbox"> Mark as Done <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            </div>
+            <!-- Hidden input for file path -->
+            <input name="filePath" type="hidden" id="filePath">
+            <!-- Button -->
+            <div class="form-group">
+                <p class="text-center">
+                    <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Publish" />
+                </p>
+            </div>
+        </form>
         <footer class="footer">
             <p>&copy; EigenAnnoy 2017</p>
         </footer>
     </div>
+    <script>
+        function fileSelected(elm){
+            var imgBlob = (window.URL || window.webkitURL).createObjectURL(elm.files[0])
+            document.querySelector("#imgUpload").src = imgBlob;
+            document.querySelector("#filePath").value = imgBlob
+        }
+
+        function addThisDrip(){
+            var form=document.querySelector("#addBabbleForm");
+            var params = new FormData(form);
+            Utils.httpRequest("/addBabble", "POST", params ,function(req){
+                var result = JSON.parse(req.response);
+                if(result.status == 'OK'){
+                   console.log(result) 
+                }
+            })
+        }
+
+
+    </script>
+
 </body>
 </html>

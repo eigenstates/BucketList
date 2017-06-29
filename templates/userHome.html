@@ -23,7 +23,7 @@
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation"><a href="/showAddBabble">Add Wish</a></li>
+                    <li role="presentation"><a href="/showAddBabble">Add More Drip</a></li>
                     <li role="presentation" class="active"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
@@ -64,7 +64,7 @@
                         <h4 class="modal-title" id="editModalLabel">Update this drip</h4>
                     </div>
                     <div class="modal-body">
-                        <form role="form">
+                        <form role="form" id="updateForm" >
                             <div class="form-group">
                                 <label for="recipient-name" class="control-label">Title:</label>
                                 <input type="text" class="form-control" id="editTitle">
@@ -72,6 +72,34 @@
                             <div class="form-group">
                                 <label for="message-text" class="control-label">Description:</label>
                                 <textarea class="form-control" id="editDescription"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtPost">Photos</label>
+                            
+                                <div class="input-group">
+                                    <span class="input-group-btn">
+                                        <span class="btn btn-primary btn-file">
+                                            Browse&hellip; <input type="file" id="fileupload" name="file" multiple>
+                                        </span>
+                                    </span>
+                                    <div class="pull-right">
+                                        <img id="imgUpload" style="width: 140px; height: 140px;" class="img-thumbnail">
+                                        <input type="hidden" name="filePath" id="filePath"></input>
+                                    </div>
+                                </div>
+                            
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Mark this as private and not visible to others.</label>
+                                <br/>
+                                <input id="chkPrivate" name="private" type="checkbox"> Mark as Private <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Have you already accomplished this?</label>
+                                <br/>
+                                <input id="chkDone" name="done" type="checkbox"> Mark as Done <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
                             </div>
                         </form>
                     </div>
@@ -103,12 +131,13 @@
     </div>
 
     <script src="https://unpkg.com/vue"></script>
+    <script src="static/scripts/Utils.js"></script>
     <script>
 
     var vm;
     function loadPageData(){
         //This seems to be the only way to get the data to populate correctly
-        httpRequest('/getBabbles', "GET", null, function(req){
+        Utils.httpRequest('/getBabbles', "GET", null, function(req){
             var dropsDict = JSON.parse(req.response);
             vm = new Vue({
                 el:"#dripsInTheBucket",
@@ -125,19 +154,29 @@
                                 currentModal.querySelector("#editTitle").value = vm.dripsData[i].Title;
                                 currentModal.querySelector("#editDescription").value = vm.dripsData[i].Description;
                                 currentModal.querySelector("#btnUpdate").setAttribute("data-id", id);
+                                currentModal.querySelector("#imgUpload").setAttribute("src", vm.dripsData[i].FilePath);
+                                if(vm.dripsData[i].Private == "1"){
+                                    currentModal.querySelector("#chkPrivate").setAttribute("checked", "checked")
+                                }
+                                if(vm.dripsData[i].Done == "1"){
+                                    currentModal.querySelector("#chkDone").setAttribute("checked", "checked")
+                                }
                             } 
                         }
                         toggleModal();
                     },
                     updateBabble:function(){
                         currentModal = document.querySelector("#editModal");
-                        var title = currentModal.querySelector("#editTitle").value
-                        var description = currentModal.querySelector("#editDescription").value
+                        var form  = document.querySelector("#updateForm");
                         var id = currentModal.querySelector("#btnUpdate").getAttribute("data-id");
+                        //var title = currentModal.querySelector("#editTitle").value
+                        //var description = currentModal.querySelector("#editDescription").value
+                        var params = new FormData(form);
+                        params.append("id", id)
 
-                        var params = "title="+title+"&description="+description+"&id="+id;
-                        httpRequest("/updateBabble", "POST", params, function(response){
-                            httpRequest('/getBabbles', "GET", null, function(req){
+                        //var params = "title="+title+"&description="+description+"&id="+id;
+                        Utils.httpRequest("/updateBabble", "POST", params, function(response){
+                            Utils.httpRequest('/getBabbles', "GET", null, function(req){
                                 var dropsDict = JSON.parse(req.response);
                                 vm.dripsData = dropsDict.babbles;
                                 toggleModal();
@@ -151,10 +190,10 @@
                     },
                     deleteBabble: function(){
                         var id = currentModal.getAttribute("data-id");
-                        httpRequest("/deleteBabble", "POST", 'id='+id, function(req){
+                        Utils.httpRequest("/deleteBabble", "POST", 'id='+id, function(req){
                             var result = JSON.parse(req.response);
                             if(result.status == 'OK'){
-                                httpRequest('/getBabbles', "GET", null, function(req){
+                                Utils.httpRequest('/getBabbles', "GET", null, function(req){
                                     var dropsDict = JSON.parse(req.response);
                                     vm.dripsData = dropsDict.babbles;
                                     toggleModal();
@@ -187,22 +226,6 @@
                 currentModal.querySelector("#editDescription").value = "";
             }
         }
-    }
-
-    function httpRequest(url, method, params, callback){
-        var http = new XMLHttpRequest();
-        http.open(method, url, true);
-        if(params){
-            http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        }
-
-        http.onreadystatechange = function() {//Call a function when the state changes.
-            if(http.readyState == 4 && http.status == 200) {
-                callback(http)
-            }
-        }
-
-        http.send(params);
     }
 
     loadPageData();
